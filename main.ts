@@ -22,9 +22,20 @@ const LINE =
 // The sealed gate accepts UTF-8 text of 1-200 characters that is not only
 // whitespace. Check the same bound here (counting code points, the way the
 // gate counts characters) and refuse to write anything the gate would reject.
+// Also pin the exact byte length: places tie on Judge win rate go to the
+// smaller text in bytes, so a silent change to the line (a different dash,
+// a trailing space) must fail loudly here instead of shipping a longer file.
+const EXPECTED_CHARS = 122;
+const EXPECTED_BYTES = 124;
 const length = [...LINE].length;
+const bytes = Buffer.byteLength(LINE, "utf-8");
 if (length < 1 || length > 200 || LINE.trim().length === 0) {
   throw new Error(`entry is ${length} chars, outside the 1-200 gate`);
+}
+if (length !== EXPECTED_CHARS || bytes !== EXPECTED_BYTES) {
+  throw new Error(
+    `entry changed: got ${length} chars / ${bytes} bytes, expected ${EXPECTED_CHARS} / ${EXPECTED_BYTES}`
+  );
 }
 
 // Write exactly LINE — no trailing newline, so the file holds 122 chars
